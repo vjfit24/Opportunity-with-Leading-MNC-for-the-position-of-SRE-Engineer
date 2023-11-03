@@ -1,0 +1,42 @@
+# cli.py
+import argparse
+import json
+import requests
+
+API_URL = "https://www.travel-advisory.info/api"
+DATA_FILE = "data.json"
+
+def fetch_data():
+    response = requests.get(API_URL)
+    if response.status_code == 200:
+        with open(DATA_FILE, "w") as f:
+            f.write(response.text)
+        return json.loads(response.text)
+    else:
+        return None
+
+def lookup_country_code(country_code):
+    with open(DATA_FILE, "r") as f:
+        data = json.load(f)
+    return data["data"][country_code]
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--countryCode", type=str, help="Country Code(s)", nargs='+')
+    args = parser.parse_args()
+
+    if not args.countryCode:
+        print("Please provide one or more country codes.")
+        return
+
+    data = fetch_data()
+    if data is None:
+        print("Failed to fetch data from the API.")
+        return
+
+    for country_code in args.countryCode:
+        country_name = lookup_country_code(country_code)
+        print(f"{country_code}: {country_name}")
+
+if __name__ == "__main__":
+    main()
